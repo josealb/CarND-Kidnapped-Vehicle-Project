@@ -61,6 +61,9 @@ public:
 	 */
 	void init(double x, double y, double theta, double std[]);
 
+	double addGaussianNoise(double mean, double std_dev);
+
+
 	/**
 	 * prediction Predicts the state for the next time step
 	 *   using the process model.
@@ -78,7 +81,7 @@ public:
 	 * @param predicted Vector of predicted landmark observations
 	 * @param observations Vector of landmark observations
 	 */
-	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
+	void dataAssociation(std::vector<Map::single_landmark_s> landmark_list, std::vector<LandmarkObs>& observations);
 	
 	/**
 	 * updateWeights Updates the weights for each particle based on the likelihood of the 

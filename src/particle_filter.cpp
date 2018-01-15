@@ -47,21 +47,55 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	}
 
 }
-
+double ParticleFilter::addGaussianNoise(double mean, double std_dev){
+		default_random_engine gen;
+		normal_distribution<double> dist(mean,std_dev);
+		return dist(gen);
+}
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
 	// TODO: Add measurements to each particle and add random Gaussian noise.
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
+	for (int i=0;i<num_particles;i++)
+	{
+		float x =  particles[i].x;
+		float y =  particles[i].y;
+		float theta =  particles[i].theta;
 
+		float new_x, new_y, new_theta;
+		new_x = x + (velocity / yaw_rate) * (sin(theta + yaw_rate * delta_t) - sin(theta));
+		new_y = y + (velocity / yaw_rate) * (cos(theta)-cos(theta-yaw_rate*delta_t));
+		new_theta = theta + yaw_rate * delta_t;
+
+		new_x = addGaussianNoise(new_x,std_pos[0]);
+		new_y = addGaussianNoise(new_y,std_pos[1]);
+		new_theta = addGaussianNoise(new_theta,std_pos[2]);
+
+		particles[i].x = new_x;
+		particles[i].y = new_y;
+		particles[i].theta = new_theta;
+	}
 }
 
-void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
+void ParticleFilter::dataAssociation(std::vector<Map::single_landmark_s> landmark_list, std::vector<LandmarkObs>& observations) {
 	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
-
+	double smallestDistance;
+	int bestMatchID;
+	for (int i=0;i<observations.size();i++){
+		smallestDistance = 99999999;
+		for int j=0;j<landmark_list.size();j++{
+			double distance = dist(observations.x,observations.y,landmark_list[i].x,landmark_list[i].y);
+			if (distance<smallestDistance){
+				smallestDistance=distance;
+				bestMatchID = landmark_list[i].id;
+			}
+		}	
+	observations[i].id = bestMatchID;
+	}
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -76,6 +110,28 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+	for(int i=0;i<particles.size();i++){
+		double theta = particles[i].theta;
+		double posX = particles[i].x;
+		double posY = particles[i].y;
+		std::vector<LandmarkObs> transformedObservations;
+		for (int j=0;j<observations.size();j++){
+			double obsX = observations[i].x;
+			double obsY = observations[i].y;
+
+			double mapX = cos(theta) * obsX - sin (theta) * obsY + posX;
+			double mapY = sin(theta) * obsY + cos (theta) * obsY + posY;
+			LandmarkObs currentObs;
+			currentObs.x=mapX;
+			currentObs.y=mapY;
+			currentObs.id=observations[i].id;
+
+			transformedObservations.push_back(currentObs);
+		}
+		dataAssociation(map_landmarks.landmark_list,transformedObservations);
+	}
+
+
 }
 
 void ParticleFilter::resample() {
