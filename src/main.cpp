@@ -72,6 +72,7 @@ int main()
             double sense_theta = std::stod(j[1]["sense_theta"].get<std::string>());
 
             pf.init(sense_x, sense_y, sense_theta, sigma_pos);
+            cout << "Filter intialized successfuly" << endl;
             }
           else {
           // Predict the vehicle's next state from previous (noiseless control) data.
@@ -110,7 +111,10 @@ int main()
         	}
 
 		  // Update the weights and resample
+      cout << "Updating weights..." << endl;
 		  pf.updateWeights(sensor_range, sigma_landmark, noisy_observations, map);
+      cout << "Updated weights" << endl;
+
 		  pf.resample();
 
 		  // Calculate and output the average weighted error of the particle filter over all time steps so far.
