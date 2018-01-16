@@ -161,24 +161,31 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		std::vector<double> observation_probs;
 		for (int j=0;j<transformedObservations.size();j++){
 			int id = transformedObservations[j].id;
+			double observationX = transformedObservations[j].x;
+			double observationY = transformedObservations[j].y;
 			double landmark_x,landmark_y;
 			for (int k=0;k<map_landmarks.landmark_list.size();k++){ //Find the corresponding id from the association
-				if (map_landmarks.landmark_list.id==id){
+				if (map_landmarks.landmark_list[k].id_i==id){
 					landmark_x=map_landmarks.landmark_list[k].x_f;
 					landmark_y=map_landmarks.landmark_list[k].y_f;
 				}
 			}
-		//Now we calculate weights
-		double landmark_std_x = std_landmark[0];
-		double landmark_std_y = std_landmark[1];
+			//Now we calculate weights
+			double landmark_std_x = std_landmark[0];
+			double landmark_std_y = std_landmark[1];
 
-		double multiplier = 1.0/(2*M_PI*landmark_std_x*landmark_std_y);
-		double cov_x = pow(landmark_std_x, 2.0);
-		double cov_y = pow(landmark_std_y, 2.0);
-		
-		double observation_prob_i = multiplier*exp(-pow(measurement.x - nearest_landmark.x, 2.0)/(2.0*cov_x) - pow(measurement.y - nearest_landmark.y, 2.0)/(2.0*cov_y));
+			double multiplier = 1.0/(2*M_PI*landmark_std_x*landmark_std_y);
+			double cov_x = pow(landmark_std_x, 2.0);
+			double cov_y = pow(landmark_std_y, 2.0);
+			
+			double observation_prob = multiplier*exp(-pow(observationX - landmark_x, 2.0)/(2.0*cov_x) - pow(observationY - landmark_y, 2.0)/(2.0*cov_y));
+			observation_probs.push_back (observation_prob);
 		}
-		
+		double particleProbabilty=observation_probs[0];
+		for (int j=1;j<observation_probs.size();j++){
+			particleProbabilty*=observation_probs[j];
+		}
+		particles[i].weight=particleProbabilty;
 	}
 
 
