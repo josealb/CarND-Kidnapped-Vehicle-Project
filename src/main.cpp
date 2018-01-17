@@ -123,15 +123,18 @@ int main()
 		  double highest_weight = -1.0;
 		  Particle best_particle;
 		  double weight_sum = 0.0;
+      int particle_index;
 		  for (int i = 0; i < num_particles; ++i) {
 			if (particles[i].weight > highest_weight) {
 				highest_weight = particles[i].weight;
 				best_particle = particles[i];
+        particle_index= i;
 			}
 			weight_sum += particles[i].weight;
 		  }
 		  cout << "highest w " << highest_weight << endl;
 		  cout << "average w " << weight_sum/num_particles << endl;
+      cout << "Chosen particle: " << particle_index << endl;
 
           json msgJson;
           msgJson["best_particle_x"] = best_particle.x;

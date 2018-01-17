@@ -72,7 +72,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 
 		float new_x, new_y, new_theta;
 		new_x = x + (velocity / yaw_rate) * (sin(theta + yaw_rate * delta_t) - sin(theta));
-		new_y = y + (velocity / yaw_rate) * (cos(theta)-cos(theta-yaw_rate*delta_t));
+		new_y = y + (velocity / yaw_rate) * (cos(theta)-cos(theta+yaw_rate*delta_t));
 		new_theta = theta + yaw_rate * delta_t;
 
 		new_x = addGaussianNoise(new_x,std_pos[0]);
@@ -154,7 +154,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 			double obsY = observations[j].y;
 
 			double mapX = cos(theta) * obsX - sin (theta) * obsY + posX;
-			double mapY = sin(theta) * obsY + cos (theta) * obsY + posY;
+			double mapY = sin(theta) * obsX + cos (theta) * obsY + posY;
 			LandmarkObs currentObs;
 			currentObs.x=mapX;
 			currentObs.y=mapY;
