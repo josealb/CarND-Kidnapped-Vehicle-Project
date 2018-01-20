@@ -62,6 +62,7 @@ public:
 	void init(double x, double y, double theta, double std[]);
 
 	double addGaussianNoise(double mean, double std_dev);
+	void printParticles(std::string label);
 
 
 	/**

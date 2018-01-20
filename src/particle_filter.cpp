@@ -24,7 +24,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
-	num_particles=100;
+
+	cout << "Initial vehicle position X: " << x << " Y: " << y << " theta: " << theta << endl;
+	num_particles=500;
 
 	default_random_engine gen;
 	double std_x = std[0];
@@ -49,21 +51,32 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	for (int i=0;i<num_particles;i++){
 		weights.push_back(1);
 	}
-//cout << "Particle X: " << particles[0].x;
-//cout << " Particle Y: " << particles[0].y << endl;
+//printParticles("After initialization");
 
 is_initialized = true;
 }
+void ParticleFilter::printParticles(std::string label){
+	cout << label << endl;
+	for (int i=0;i<particles.size();i++){
+		cout << "ID: " <<particles[i].id << " X: " << particles[i].x << "Y: " << particles[i].y << " theta: " << particles[i].theta <<" weight: " << particles[i].weight << endl;
+	}
+	cout << "------------" << endl;
+}
 double ParticleFilter::addGaussianNoise(double mean, double std_dev){
-		default_random_engine gen;
-		normal_distribution<double> dist(mean,std_dev);
-		return dist(gen);
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+
+	normal_distribution<double> dist(mean,std_dev);
+	return dist(gen);
 }
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
 	// TODO: Add measurements to each particle and add random Gaussian noise.
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
+	cout << "Delta T: " << delta_t << " Velocity: " << velocity << " Yaw Rate: " << yaw_rate << endl;
+ 	//printParticles("Before prediction");
 	for (int i=0;i<num_particles;i++)
 	{
 		float x =  particles[i].x;
@@ -82,9 +95,9 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		particles[i].x = new_x;
 		particles[i].y = new_y;
 		particles[i].theta = new_theta;
-		
 //		cout << "After " << delta_t << "ms" << "particle is predicted" << endl << "X: " << particles[i].x << " Y: " << particles[i].y;
 	}
+	//printParticles("After prediction");
 }
 
 void ParticleFilter::dataAssociation(Particle& particle, std::vector<Map::single_landmark_s> landmark_list, std::vector<LandmarkObs>& observations) {
@@ -141,6 +154,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+	//printParticles("Before updating weights");
 	for(int i=0;i<particles.size();i++){
 		//cout << "Started processing particle: " << std::to_string(i) << endl;
 		double theta = particles[i].theta;
@@ -198,13 +212,15 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		weights[i]=particleProbabilty;
 	}
 
-
+//printParticles("After updating weights");
 }
 
 void ParticleFilter::resample() {
 	// TODO: Resample particles with replacement with probability proportional to their weight. 
 	// NOTE: You may find std::discrete_distribution helpful here.
 	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+	//printParticles("Before resampling");
+
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::discrete_distribution<> d(weights.begin(), weights.end());
@@ -216,6 +232,12 @@ void ParticleFilter::resample() {
 		particles_new.push_back(particles[index]);
 	}
 	particles=particles_new;
+
+	for (int i=0;i<particles.size();i++){
+		particles[i].id = i;
+	}
+	//printParticles("After Resampling");
+
 }
 
 Particle ParticleFilter::SetAssociations(Particle& particle, const std::vector<int>& associations, 
