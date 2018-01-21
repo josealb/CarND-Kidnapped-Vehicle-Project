@@ -26,7 +26,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
 	cout << "Initial vehicle position X: " << x << " Y: " << y << " theta: " << theta << endl;
-	num_particles=500;
+	num_particles=100;
 
 	default_random_engine gen;
 	double std_x = std[0];
@@ -76,17 +76,26 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 	cout << "Delta T: " << delta_t << " Velocity: " << velocity << " Yaw Rate: " << yaw_rate << endl;
- 	//printParticles("Before prediction");
+ 	float thresh = 0.001;
+	bool driving_straight;
+	//printParticles("Before prediction");
 	for (int i=0;i<num_particles;i++)
 	{
 		float x =  particles[i].x;
 		float y =  particles[i].y;
 		float theta =  particles[i].theta;
-
 		float new_x, new_y, new_theta;
-		new_x = x + (velocity / yaw_rate) * (sin(theta + yaw_rate * delta_t) - sin(theta));
-		new_y = y + (velocity / yaw_rate) * (cos(theta)-cos(theta+yaw_rate*delta_t));
-		new_theta = theta + yaw_rate * delta_t;
+
+		if (yaw_rate<thresh){
+			new_x = x + velocity * delta_t * cos(theta);
+			new_y = y + velocity * delta_t * sin(theta);
+		}
+		else{
+			new_x = x + (velocity / yaw_rate) * (sin(theta + yaw_rate * delta_t) - sin(theta));
+			new_y = y + (velocity / yaw_rate) * (cos(theta)-cos(theta+yaw_rate*delta_t));
+		}
+	
+		new_theta = theta + yaw_rate* delta_t;
 
 		new_x = addGaussianNoise(new_x,std_pos[0]);
 		new_y = addGaussianNoise(new_y,std_pos[1]);
@@ -98,6 +107,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 //		cout << "After " << delta_t << "ms" << "particle is predicted" << endl << "X: " << particles[i].x << " Y: " << particles[i].y;
 	}
 	//printParticles("After prediction");
+
 }
 
 void ParticleFilter::dataAssociation(Particle& particle, std::vector<Map::single_landmark_s> landmark_list, std::vector<LandmarkObs>& observations) {
